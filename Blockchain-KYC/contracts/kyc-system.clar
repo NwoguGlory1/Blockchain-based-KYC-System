@@ -106,3 +106,17 @@
     (ok new-id)
   )
 )
+
+(define-public (revoke-business (business-id uint))
+  (let
+    (
+      (business (unwrap! (map-get? businesses { business-id: business-id }) err-not-found))
+    )
+    (asserts! (is-contract-owner) err-unauthorized)
+    (map-set businesses
+      { business-id: business-id }
+      (merge business { is-approved: false })
+    )
+    (ok true)
+  )
+)
