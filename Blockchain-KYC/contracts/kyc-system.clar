@@ -32,3 +32,16 @@
 (define-constant err-already-exists (err u101))
 (define-constant err-not-found (err u102))
 (define-constant err-already-verified (err u103))
+
+
+;; Helper functions
+(define-private (is-contract-owner)
+  (is-eq tx-sender (var-get contract-owner))
+)
+
+(define-private (is-approved-business (business-id uint))
+  (match (map-get? businesses { business-id: business-id })
+    business (get is-approved business)
+    false
+  )
+)
