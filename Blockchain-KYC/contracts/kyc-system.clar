@@ -132,3 +132,7 @@
     false
   )
 )
+
+(define-read-only (is-business-approved (business-id uint))
+  (is-approved-business business-id)
+)
