@@ -45,3 +45,26 @@
     false
   )
 )
+
+;; Public functions
+(define-public (add-customer (name (string-utf8 100)) (date-of-birth uint) (residence-country (string-utf8 50)))
+  (let
+    (
+      (new-id (+ (var-get customer-id-nonce) u1))
+    )
+    (asserts! (is-none (map-get? customers { customer-id: new-id })) err-already-exists)
+    (map-set customers
+      { customer-id: new-id }
+      {
+        address: tx-sender,
+        name: name,
+        date-of-birth: date-of-birth,
+        residence-country: residence-country,
+        is-verified: false,
+        verification-date: u0
+      }
+    )
+    (var-set customer-id-nonce new-id)
+    (ok new-id)
+  )
+)
