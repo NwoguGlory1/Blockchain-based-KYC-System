@@ -68,3 +68,21 @@
     (ok new-id)
   )
 )
+
+(define-public (verify-customer (customer-id uint) (business-id uint))
+  (let
+    (
+      (customer (unwrap! (map-get? customers { customer-id: customer-id }) err-not-found))
+    )
+    (asserts! (is-approved-business business-id) err-unauthorized)
+    (asserts! (not (get is-verified customer)) err-already-verified)
+    (map-set customers
+      { customer-id: customer-id }
+      (merge customer { 
+        is-verified: true,
+        verification-date: block-height
+      })
+    )
+    (ok true)
+  )
+)
