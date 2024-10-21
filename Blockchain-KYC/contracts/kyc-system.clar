@@ -86,3 +86,23 @@
     (ok true)
   )
 )
+
+(define-public (approve-business (address principal) (name (string-utf8 100)))
+  (let
+    (
+      (new-id (+ (var-get business-id-nonce) u1))
+    )
+    (asserts! (is-contract-owner) err-unauthorized)
+    (asserts! (is-none (map-get? businesses { business-id: new-id })) err-already-exists)
+    (map-set businesses
+      { business-id: new-id }
+      {
+        address: address,
+        name: name,
+        is-approved: true
+      }
+    )
+    (var-set business-id-nonce new-id)
+    (ok new-id)
+  )
+)
