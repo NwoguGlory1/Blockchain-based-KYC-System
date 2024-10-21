@@ -120,3 +120,8 @@
     (ok true)
   )
 )
+
+;; Read-only functions
+(define-read-only (get-customer-details (customer-id uint))
+  (map-get? customers { customer-id: customer-id })
+)
