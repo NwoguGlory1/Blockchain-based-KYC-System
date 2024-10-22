@@ -184,5 +184,36 @@
   )
 )
 
+;; Enhanced verification functions
+(define-public (add-verification-record
+    (customer-id uint)
+    (business-id uint)
+    (verification-type (string-utf8 50))
+    (validity-period uint)  ;; in blocks
+  )
+  (let
+    (
+      (customer (unwrap! (map-get? customers { customer-id: customer-id }) err-not-found))
+      (current-nonce (get nonce (get-verification-nonce customer-id)))
+      (new-nonce (+ current-nonce u1))
+    )
+    (asserts! (is-approved-business business-id) err-unauthorized)
+    (map-set verification-history
+      { customer-id: customer-id, verification-number: new-nonce }
+      {
+        business-id: business-id,
+        verification-date: block-height,
+        verification-type: verification-type,
+        expiration-date: (+ block-height validity-period)
+      }
+    )
+    (map-set customer-verification-nonce
+      { customer-id: customer-id }
+      { nonce: new-nonce }
+    )
+    (ok new-nonce)
+  )
+)
+
 
 
