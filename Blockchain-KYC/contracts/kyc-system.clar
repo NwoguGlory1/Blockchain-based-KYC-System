@@ -161,5 +161,28 @@
   (is-approved-business business-id)
 )
 
+(define-public (update-customer-data 
+    (customer-id uint)
+    (new-name (optional (string-utf8 100)))
+    (new-residence-country (optional (string-utf8 50)))
+  )
+  (let
+    (
+      (customer (unwrap! (map-get? customers { customer-id: customer-id }) err-not-found))
+    )
+    (asserts! (is-eq tx-sender (get address customer)) err-unauthorized)
+    (map-set customers
+      { customer-id: customer-id }
+      (merge customer
+        {
+          name: (default-to (get name customer) new-name),
+          residence-country: (default-to (get residence-country customer) new-residence-country)
+        }
+      )
+    )
+    (ok true)
+  )
+)
+
 
 
