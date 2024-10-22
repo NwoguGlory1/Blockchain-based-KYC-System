@@ -215,5 +215,16 @@
   )
 )
 
+;; Read-only functions for verification history
+(define-read-only (get-verification-record 
+    (customer-id uint)
+    (verification-number uint)
+  )
+  (map-get? verification-history
+    { customer-id: customer-id, verification-number: verification-number }
+  )
+)
+
+
 
 
