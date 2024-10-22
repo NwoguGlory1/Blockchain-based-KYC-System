@@ -225,6 +225,18 @@
   )
 )
 
+(define-read-only (get-latest-verification
+    (customer-id uint)
+  )
+  (let
+    (
+      (latest-nonce (get nonce (get-verification-nonce customer-id)))
+    )
+    (map-get? verification-history
+      { customer-id: customer-id, verification-number: latest-nonce }
+    )
+  )
+)
 
 
 
