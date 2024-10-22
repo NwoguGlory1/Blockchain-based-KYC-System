@@ -24,6 +24,24 @@
   }
 )
 
+(define-map verification-history
+  { customer-id: uint, verification-number: uint }
+  {
+    business-id: uint,
+    verification-date: uint,
+    verification-type: (string-utf8 50),
+    expiration-date: uint
+  }
+)
+
+(define-map customer-verification-nonce 
+  { customer-id: uint }
+  { nonce: uint }
+)
+
+(define-constant err-expired-verification (err u104))
+(define-constant err-invalid-data (err u105))
+(define-constant err-verification-required (err u106))
 (define-data-var customer-id-nonce uint u0)
 (define-data-var business-id-nonce uint u0)
 
@@ -136,3 +154,4 @@
 (define-read-only (is-business-approved (business-id uint))
   (is-approved-business business-id)
 )
+
