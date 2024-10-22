@@ -249,6 +249,23 @@
   )
 )
 
+;; Business management functions
+(define-public (update-business-name
+    (business-id uint)
+    (new-name (string-utf8 100))
+  )
+  (let
+    (
+      (business (unwrap! (map-get? businesses { business-id: business-id }) err-not-found))
+    )
+    (asserts! (is-eq tx-sender (get address business)) err-unauthorized)
+    (map-set businesses
+      { business-id: business-id }
+      (merge business { name: new-name })
+    )
+    (ok true)
+  )
+)
 
 
 
