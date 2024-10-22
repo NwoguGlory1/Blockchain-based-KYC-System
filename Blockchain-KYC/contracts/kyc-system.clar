@@ -64,6 +64,12 @@
   )
 )
 
+(define-private (get-verification-nonce (customer-id uint))
+  (default-to { nonce: u0 }
+    (map-get? customer-verification-nonce { customer-id: customer-id })
+  )
+)
+
 ;; Public functions
 (define-public (add-customer (name (string-utf8 100)) (date-of-birth uint) (residence-country (string-utf8 50)))
   (let
@@ -154,4 +160,6 @@
 (define-read-only (is-business-approved (business-id uint))
   (is-approved-business business-id)
 )
+
+
 
