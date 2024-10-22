@@ -267,5 +267,13 @@
   )
 )
 
+(define-read-only (get-business-details (business-id uint))
+  (map-get? businesses { business-id: business-id })
+)
+
+(define-read-only (get-total-verifications (customer-id uint))
+  (get nonce (get-verification-nonce customer-id))
+)
+
 
 
