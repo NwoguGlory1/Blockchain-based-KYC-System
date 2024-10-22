@@ -238,5 +238,17 @@
   )
 )
 
+(define-read-only (is-verification-valid
+    (customer-id uint)
+    (verification-number uint)
+  )
+  (match (map-get? verification-history
+    { customer-id: customer-id, verification-number: verification-number })
+    verification (< block-height (get expiration-date verification))
+    false
+  )
+)
+
+
 
 
