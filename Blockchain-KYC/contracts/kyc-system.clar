@@ -24,6 +24,24 @@
   }
 )
 
+(define-map verification-history
+  { customer-id: uint, verification-number: uint }
+  {
+    business-id: uint,
+    verification-date: uint,
+    verification-type: (string-utf8 50),
+    expiration-date: uint
+  }
+)
+
+(define-map customer-verification-nonce 
+  { customer-id: uint }
+  { nonce: uint }
+)
+
+(define-constant err-expired-verification (err u104))
+(define-constant err-invalid-data (err u105))
+(define-constant err-verification-required (err u106))
 (define-data-var customer-id-nonce uint u0)
 (define-data-var business-id-nonce uint u0)
 
@@ -43,6 +61,12 @@
   (match (map-get? businesses { business-id: business-id })
     business (get is-approved business)
     false
+  )
+)
+
+(define-private (get-verification-nonce (customer-id uint))
+  (default-to { nonce: u0 }
+    (map-get? customer-verification-nonce { customer-id: customer-id })
   )
 )
 
@@ -136,3 +160,120 @@
 (define-read-only (is-business-approved (business-id uint))
   (is-approved-business business-id)
 )
+
+(define-public (update-customer-data 
+    (customer-id uint)
+    (new-name (optional (string-utf8 100)))
+    (new-residence-country (optional (string-utf8 50)))
+  )
+  (let
+    (
+      (customer (unwrap! (map-get? customers { customer-id: customer-id }) err-not-found))
+    )
+    (asserts! (is-eq tx-sender (get address customer)) err-unauthorized)
+    (map-set customers
+      { customer-id: customer-id }
+      (merge customer
+        {
+          name: (default-to (get name customer) new-name),
+          residence-country: (default-to (get residence-country customer) new-residence-country)
+        }
+      )
+    )
+    (ok true)
+  )
+)
+
+;; Enhanced verification functions
+(define-public (add-verification-record
+    (customer-id uint)
+    (business-id uint)
+    (verification-type (string-utf8 50))
+    (validity-period uint)  ;; in blocks
+  )
+  (let
+    (
+      (customer (unwrap! (map-get? customers { customer-id: customer-id }) err-not-found))
+      (current-nonce (get nonce (get-verification-nonce customer-id)))
+      (new-nonce (+ current-nonce u1))
+    )
+    (asserts! (is-approved-business business-id) err-unauthorized)
+    (map-set verification-history
+      { customer-id: customer-id, verification-number: new-nonce }
+      {
+        business-id: business-id,
+        verification-date: block-height,
+        verification-type: verification-type,
+        expiration-date: (+ block-height validity-period)
+      }
+    )
+    (map-set customer-verification-nonce
+      { customer-id: customer-id }
+      { nonce: new-nonce }
+    )
+    (ok new-nonce)
+  )
+)
+
+;; Read-only functions for verification history
+(define-read-only (get-verification-record 
+    (customer-id uint)
+    (verification-number uint)
+  )
+  (map-get? verification-history
+    { customer-id: customer-id, verification-number: verification-number }
+  )
+)
+
+(define-read-only (get-latest-verification
+    (customer-id uint)
+  )
+  (let
+    (
+      (latest-nonce (get nonce (get-verification-nonce customer-id)))
+    )
+    (map-get? verification-history
+      { customer-id: customer-id, verification-number: latest-nonce }
+    )
+  )
+)
+
+(define-read-only (is-verification-valid
+    (customer-id uint)
+    (verification-number uint)
+  )
+  (match (map-get? verification-history
+    { customer-id: customer-id, verification-number: verification-number })
+    verification (< block-height (get expiration-date verification))
+    false
+  )
+)
+
+;; Business management functions
+(define-public (update-business-name
+    (business-id uint)
+    (new-name (string-utf8 100))
+  )
+  (let
+    (
+      (business (unwrap! (map-get? businesses { business-id: business-id }) err-not-found))
+    )
+    (asserts! (is-eq tx-sender (get address business)) err-unauthorized)
+    (map-set businesses
+      { business-id: business-id }
+      (merge business { name: new-name })
+    )
+    (ok true)
+  )
+)
+
+(define-read-only (get-business-details (business-id uint))
+  (map-get? businesses { business-id: business-id })
+)
+
+(define-read-only (get-total-verifications (customer-id uint))
+  (get nonce (get-verification-nonce customer-id))
+)
+
+
+
